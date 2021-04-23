@@ -2,7 +2,7 @@
 # vim: set ft=ruby :
 MACHINES = {
   # VM name "srvbackup"
- :"srvlog" => {
+ :"srvrsl" => {
               # VM box
               :box_conf => "centos/8",
               # VM CPU count
@@ -23,13 +23,13 @@ MACHINES = {
               #                     }
               #           }
                   },
-  :"client" => {
+  :"clientrsl" => {
               # VM box
               :box_conf => "centos/8",
               # VM CPU count
               :cpus => 1,
               # VM RAM size (Mb)
-              :memory => 256,
+              :memory => 512,
               # networks
               :ip_addr => '192.168.10.10'
             }
@@ -70,15 +70,22 @@ Vagrant.configure("2") do |config|
             end
 
             box.vm.provision "shell",  inline: <<-SHELL
-              yum install -y --nogpgcheck epel-release > /dev/null 2>&1
-              # yum install -y --nogpgcheck borgbackup sshpass > /dev/null 2>&1
+              dnf install -y --nogpgcheck epel-release > /dev/null 2>&1
+              dnf install -y --nogpgcheck lnav mc policycoreutils-python-utils setroubleshoot-server > /dev/null 2>&1
+              # dnf install -y --nogpgcheck borgbackup sshpass > /dev/null 2>&1
                   SHELL
-            # if boxname.to_s == "srvlog"
-            #   box.vm.provision "shell", path: "srvbackup.sh"
-            # end
-            # if boxname.to_s == "client"
-            #   box.vm.provision "shell", path: "client.sh"
-            # end
+             if boxname.to_s == "srvrsl"
+               box.vm.provision "shell",  inline: <<-SHELL
+
+            #   box.vm.provision "shell", path: "srvrsl.sh"
+                SHELL
+             end
+             if boxname.to_s == "clientrsl"
+              box.vm.provision "shell",  inline: <<-SHELL
+              dnf install -y --nogpgcheck nginx
+            #   box.vm.provision "shell", path: "clientrsl.sh"
+              SHELL
+             end
 
 
       end
