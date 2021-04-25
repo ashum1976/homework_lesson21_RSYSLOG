@@ -19,9 +19,51 @@ ___
 
     semanage port -a -t  syslogd_port_t -p tcp 35514  
 
-**SELinux разрешить syslogd доступ к audit.log файлу**
-  Меняем контекст с auditd_log_t syslogd_unit_file_t
-  chcon -vR -t syslogd_tmp_t /var/log/audit/
+**SELinux создадание модуля с нужными разрешениями:**
+
+1. checkmodule -M -m syslog_audit.te -o syslog_audit.mod
+2. semodule_package -m syslog_audit.mod -o syslog_audit.pp
+3. semodule -i  syslog_audit.pp
+![Файл разрешений для создания SELinux модуля](rsyslog_conf/syslog_audit.te)
+
+####Настройка rsyslog
+
+Дополнительную конфигурацию по настройке и обработке входящих сообщений от клиентских компьютеров вынесем в отдельные конфигурационные файлы:
+
+![Файл настройки запуска сервера и шаблоны обработки сообщений](rsyslog_conf/99-gconf.conf)
+![Файл обработки входящих сообщений](rsyslog_conf/remote_log.conf)
+
+Удобнее создавать файлы обработки и файлы шаблонов, для каждого клиента отдельно
+
+
+Дополнительную конфигурацию по обработке и логгированию событий для клиентского компьютера, вынесем в отдельный конфигурационный файл (05-srvrslauth_log.conf):
+
+![Конфигурационный файл клиента](rsyslog_conf/05-srvrslauth_log.conf)
+
+
+
+Ошибки в работе nginx-a будем записывать как локально в файл (error_log /var/log/nginx/error.log;), так и передавать на червер логов, с помощью модуля imfile (следим за изменением файла логов):
+
+      >input(type="imfile"
+      file="/var/log/audit/audit.log"
+      tag="audit"
+      reopenOnTruncate="on"
+
+
+Начиная с версии nginx-a 1.7.1 директивы error_log и access_log, в конфигурационном файле nginx.conf, поддерживают запись в syslog. Поэтому настроим передачу логов непосредственно в самом файле nginx.conf, закоментировав стороку  "access_log  /var/log/nginx/access.log  main;" и добавив следующую:
+
+    access_log syslog:server=192.168.10.11:35514,facility=local6,tag=nginx_acces,severity=info combined;
+
+**Данные передаются по UDP протоколу !!!!**
+
+<!-- После включения модуля для разрешения чтения файла audit.log, перегрузить СЕРВИС auditd:
+
+    service auditd restart
+
+
+![Порядок следования записей ВАЖЕН !!!!](rsyslog_conf/05-srvrslauth_log.conf) -->
+
+
 
 ___
 
