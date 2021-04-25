@@ -24,7 +24,7 @@ ___
 1. checkmodule -M -m syslog_audit.te -o syslog_audit.mod
 2. semodule_package -m syslog_audit.mod -o syslog_audit.pp
 3. semodule -i  syslog_audit.pp
-![Файл разрешений для создания SELinux модуля](rsyslog_conf/syslog_audit.te)
+[Файл разрешений для создания SELinux модуля](rsyslog_conf/syslog_audit.te)
 
 
 
