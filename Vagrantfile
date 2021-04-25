@@ -76,23 +76,19 @@ Vagrant.configure("2") do |config|
                   SHELL
              if boxname.to_s == "srvrsl"
                box.vm.provision "shell",  inline: <<-SHELL
-
+               cp /vagrant/rsyslog_conf/{99-gconf.conf,remote_log.conf} /etc/rsyslog.d/
+               systemctl restart rsyslog
+               SHELL
             #   box.vm.provision "shell", path: "srvrsl.sh"
-                SHELL
+
              end
              if boxname.to_s == "clientrsl"
               box.vm.provision "shell",  inline: <<-SHELL
-              dnf install -y --nogpgcheck nginx
-              #START Box SELinux
-              #SELinux create and load module, allow nonstandart port for connect client to server, create on client
-              semanage port -a -t syslogd_port_t -p tcp 35514
-              checkmodule -M -m /vagrant/rsyslog_conf/syslog_audit.te -o /root/syslog_audit.mod
-              semodule_package -m /root/syslog_audit.mod -o /root/syslog_audit.pp
-              semodule -i /root/syslog_audit.pp
-              seravice auditd restart
-              ##END Box SELinux
-            #   box.vm.provision "shell", path: "clientrsl.sh"
+              dnf install -y --nogpgcheck nginx > /dev/null 2>&1
+              systemctl enable --now nginx
               SHELL
+              box.vm.provision "shell", path: "clientrsl.sh"
+
              end
 
 
